@@ -1,0 +1,6 @@
+mediapipe
+opencv-python
+pandas
+numpy
+scikit-learn
+scikit-image
