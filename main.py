@@ -1,9 +1,16 @@
 import cv2
 import mediapipe as mp
-
+from model_architectures.autoencoder import SingleAutoencoder
 
 if __name__ == '__main__':
 
+    autoencoder = SingleAutoencoder(input_dimension=224,
+                                    summarize_model=True,
+                                    patch_size=4,
+                                    expansion_factor=2,
+                                    pre_trained_path=None)
+
+    '''
     # Initialize MediaPipe Face Mesh
     mp_face_mesh = mp.solutions.face_mesh
     face_mesh = mp_face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1, min_detection_confidence=0.5)
@@ -54,3 +61,4 @@ if __name__ == '__main__':
 
     cap.release()
     cv2.destroyAllWindows()
+    '''
