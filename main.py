@@ -4,6 +4,8 @@ from model_architectures.autoencoder import SingleAutoencoder
 
 if __name__ == '__main__':
 
+
+
     autoencoder = SingleAutoencoder(input_dimension=224,
                                     summarize_model=True,
                                     patch_size=4,
