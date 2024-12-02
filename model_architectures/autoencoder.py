@@ -8,7 +8,7 @@ import keras
 
 import sys
 sys.path.insert(0, '..')
-from custom_losses.custom_losses import focal_loss_for_regression, root_mean_squared_error
+from losses.custom_losses import focal_loss_for_regression, root_mean_squared_error
 
 class SingleAutoencoder():
 
