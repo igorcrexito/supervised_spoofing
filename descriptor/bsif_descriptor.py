@@ -1,13 +1,9 @@
-import pandas as pd
-
-from descriptors.image_descriptor import ImageDescriptor
+from descriptor.image_descriptor import ImageDescriptor
 import numpy as np
 import scipy
 import math
 from scipy import signal
-import glob
-from PIL import Image, ImageOps
-import tqdm
+import cv2
 
 
 class BSIFDescriptor(ImageDescriptor):

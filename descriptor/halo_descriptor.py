@@ -5,8 +5,8 @@ import cv2
 
 class HaloDescriptor(ImageDescriptor):
 
-    def __init__(self, descriptor_name: str, threshold_1: int, threshold_2: int,
-                 gaussian_filter_size: int, dilation_epochs: int = 1):
+    def __init__(self, descriptor_name: str, threshold_1: int = 50, threshold_2: int = 150,
+                 gaussian_filter_size: int = 5, dilation_epochs: int = 1):
         super().__init__(descriptor_name)
         self.threshold_1 = threshold_1
         self.threshold_2 = threshold_2

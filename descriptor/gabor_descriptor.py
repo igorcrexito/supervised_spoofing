@@ -6,7 +6,7 @@ from skimage import filters
 
 class GaborDescriptor(ImageDescriptor):
 
-    def __init__(self, descriptor_name: str, frequency: float, theta: float):
+    def __init__(self, descriptor_name: str, frequency: float = 0.2, theta: float = 0):
         super().__init__(descriptor_name)
         self.frequency = frequency
         self.theta = theta
