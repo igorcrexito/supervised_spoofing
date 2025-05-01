@@ -1,4 +1,4 @@
-from keras.layers import Input, Conv2D, Conv3D, MaxPooling2D, UpSampling2D, Concatenate, LayerNormalization, ZeroPadding2D, \
+from keras.layers import Input, Conv2D, Conv3D, MaxPooling3D, UpSampling2D, Concatenate, LayerNormalization, ZeroPadding2D, \
     BatchNormalization, Flatten, Dense, Reshape, DepthwiseConv2D, Add, Dropout, MultiHeadAttention, Rescaling, Activation
 from keras.models import Model
 import numpy as np
@@ -27,25 +27,33 @@ class SingleModel:
         # Define Conv3D and Flatten layers for each input
         for i in range(num_inputs):
             if i == 0:
-                input_layer = Input(shape=(32, 80, 80, 7), name=f'input_face')
+                input_layer = Input(shape=(6, 80, 80, 7), name=f'input_face')
                 inputs.append(input_layer)
             elif i == 1:
-                input_layer = Input(shape=(32, 32, 32, 7), name=f'input_forehead')
+                input_layer = Input(shape=(6, 32, 32, 7), name=f'input_forehead')
                 inputs.append(input_layer)
             elif i == 2:
-                input_layer = Input(shape=(32, 24, 24, 7), name=f'input_left_cheek')
+                input_layer = Input(shape=(6, 24, 24, 7), name=f'input_left_cheek')
                 inputs.append(input_layer)
             elif i == 3:
-                input_layer = Input(shape=(32, 24, 24, 7), name=f'input_right_cheek')
+                input_layer = Input(shape=(6, 24, 24, 7), name=f'input_right_cheek')
                 inputs.append(input_layer)
             else:
-                input_layer = Input(shape=(32, 20, 20, 7), name=f'input_mouth')
+                input_layer = Input(shape=(6, 20, 20, 7), name=f'input_mouth')
                 inputs.append(input_layer)
 
             # Conv3D block
             x = Conv3D(filters=16, kernel_size=(3, 3, 3), activation='relu', padding='same')(input_layer)
             x = Conv3D(filters=16, kernel_size=(3, 3, 3), activation='relu', padding='same')(x)
-            x = Conv3D(filters=32, kernel_size=(3, 3, 3), activation='relu', padding='same')(x)
+            x = Conv3D(filters=16, kernel_size=(3, 3, 3), activation='relu', padding='same')(x)
+
+            x = MaxPooling3D(pool_size=(2, 2, 2))(x)
+
+            x = Conv3D(filters=16, kernel_size=(3, 3, 3), activation='relu', padding='same')(x)
+            x = Conv3D(filters=16, kernel_size=(3, 3, 3), activation='relu', padding='same')(x)
+            x = Conv3D(filters=16, kernel_size=(3, 3, 3), activation='relu', padding='same')(x)
+
+            x = MaxPooling3D(pool_size=(2, 2, 2))(x)
 
             # Flatten the output
             x = Flatten()(x)
@@ -55,13 +63,13 @@ class SingleModel:
         concatenated = Concatenate()(processed_inputs)
 
         # Fully connected layers
-        x = Dense(units=64, activation='relu')(concatenated)
-        x = Dropout(0.5)(x)
+        x = Dense(units=128, activation='relu')(concatenated)
+        x = Dropout(0.25)(x)
         x = Dense(units=32, activation='relu')(x)
-        x = Dropout(0.5)(x)
+        x = Dropout(0.25)(x)
         x = Dense(units=16, activation='relu')(x)
 
-        # Output layer for binary classification
+        # Output layer for categorical classification
         output = Dense(units=2, activation='softmax', name='output')(x)
 
         # Create the model
@@ -90,25 +98,50 @@ class SingleModel:
             labels (np.ndarray): Corresponding labels for the input data.
             number_of_epochs (int): Number of epochs to train.
         """
-        checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath='trained_models/single_model.keras', monitor='val_loss',
+        checkpoint = tf.keras.callbacks.ModelCheckpoint(filepath='trained_models/single_model.keras', monitor='loss',
             verbose=1, save_best_only=True, mode='min')
 
-        dummy_inputs = {
-            'input_face': np.random.rand(3, 32, 80, 80, 7),
-            'input_forehead': np.random.rand(3, 32, 32, 32, 7),
-            'input_left_cheek': np.random.rand(3, 32, 24, 24, 7),
-            'input_right_cheek': np.random.rand(3, 32, 24, 24, 7),
-            'input_mouth': np.random.rand(3, 32, 20, 20, 7)
+        inputs = {
+            'input_face': input_data_head,
+            'input_forehead': input_data_forehead,
+            'input_left_cheek': input_data_left_cheek,
+            'input_right_cheek': input_data_right_cheek,
+            'input_mouth': input_data_mouth
         }
-        dummy_labels = np.array([[0, 1], [1, 0], [0, 1]])
 
         self.model.fit(
-            dummy_inputs,  # Pass inputs as a dictionary
-            dummy_labels,
+            inputs,
+            labels,
             epochs=number_of_epochs,
             batch_size=1,
-            shuffle=True
+            shuffle=True,
+            class_weight={0: 1, 1:2},
+            callbacks=[checkpoint]
         )
 
 
-        ### WIP !! FROM HERE !!
+    def predict_data(self, input_data_head: np.ndarray, input_data_forehead: np.ndarray, input_data_left_cheek: np.ndarray,
+                  input_data_right_cheek: np.ndarray, input_data_mouth: np.ndarray, labels: np.ndarray):
+        """
+        Fit the model with multiple inputs.
+
+        Args:
+            input_data_head (np.ndarray): Input data for the head region.
+            input_data_forehead (np.ndarray): Input data for the forehead region.
+            input_data_left_cheek (np.ndarray): Input data for the left cheek region.
+            input_data_right_cheek (np.ndarray): Input data for the right cheek region.
+            input_data_mouth (np.ndarray): Input data for the mouth region.
+            labels (np.ndarray): Corresponding labels for the input data.
+            number_of_epochs (int): Number of epochs to train.
+        """
+        inputs = {
+            'input_face': input_data_head,
+            'input_forehead': input_data_forehead,
+            'input_left_cheek': input_data_left_cheek,
+            'input_right_cheek': input_data_right_cheek,
+            'input_mouth': input_data_mouth
+        }
+
+        predictions = self.model.predict(inputs)
+
+        return predictions
